@@ -39,3 +39,13 @@ class_dict = {
     MOVE: "MOVE",
     UNK: "UNK",
 }
+
+resteaze_class_dict = {
+    0 : "WK",
+    1 : "N1",
+    2 : "N2",
+    3 : "N3",
+    4 : "REM",
+    MOVE: "MOVE",
+    -1: "UNK",
+}

@@ -14,6 +14,16 @@ def get_subject_files(dataset, files, sid):
     elif "sleepedf" in dataset:
         reg_exp = f"S[C|T][4|7]{str(sid).zfill(2)}[a-zA-Z0-9]+\.npz$"
         # reg_exp = "[a-zA-Z0-9]*{}[1-9]E0\.npz$".format(str(sid).zfill(2))
+    elif "resteaze" in dataset:
+        # check if the sid is present in the files
+        subject_files = []
+        for f in files:
+            if str(sid) in f:
+                subject_files.append(f)
+
+        print(sid, len(subject_files), subject_files)
+        return subject_files
+
     elif "isruc" in dataset:
         reg_exp = f"subject{sid+1}.npz"
     else:
@@ -25,7 +35,7 @@ def get_subject_files(dataset, files, sid):
         pattern = re.compile(reg_exp)
         if pattern.search(f):
             subject_files.append(f)
-
+    print(sid, len(subject_files), subject_files)
     return subject_files
 
 

@@ -15,7 +15,6 @@ from minibatching import (iterate_minibatches,
                           iterate_batch_multiple_seq_minibatches)
 from utils import (get_balance_class_oversample,
                    print_n_samples_each_class,
-                   print_n_samples_each_class_resteaze,
                    compute_portion_each_class,
                    save_seq_ids,
                    load_seq_ids)
@@ -109,27 +108,15 @@ def train(
     test_x, test_y, _ = load_data(test_files)
 
     # Print training, validation and test sets
-    if config["dataset"] == "resteaze":
-        logger.info("Training set (n_night_sleeps={})".format(len(train_y)))
-        for _x in train_x: logger.info(_x.shape)
-        print_n_samples_each_class_resteaze(np.hstack(train_y))
-        logger.info("Validation set (n_night_sleeps={})".format(len(valid_y)))
-        for _x in valid_x: logger.info(_x.shape)
-        print_n_samples_each_class_resteaze(np.hstack(valid_y))
-        logger.info("Test set (n_night_sleeps={})".format(len(test_y)))
-        for _x in test_x: logger.info(_x.shape)
-        print_n_samples_each_class_resteaze(np.hstack(test_y))
-
-    else:
-        logger.info("Training set (n_night_sleeps={})".format(len(train_y)))
-        for _x in train_x: logger.info(_x.shape)
-        print_n_samples_each_class(np.hstack(train_y))
-        logger.info("Validation set (n_night_sleeps={})".format(len(valid_y)))
-        for _x in valid_x: logger.info(_x.shape)
-        print_n_samples_each_class(np.hstack(valid_y))
-        logger.info("Test set (n_night_sleeps={})".format(len(test_y)))
-        for _x in test_x: logger.info(_x.shape)
-        print_n_samples_each_class(np.hstack(test_y))
+    logger.info("Training set (n_night_sleeps={})".format(len(train_y)))
+    for _x in train_x: logger.info(_x.shape)
+    print_n_samples_each_class(np.hstack(train_y))
+    logger.info("Validation set (n_night_sleeps={})".format(len(valid_y)))
+    for _x in valid_x: logger.info(_x.shape)
+    print_n_samples_each_class(np.hstack(valid_y))
+    logger.info("Test set (n_night_sleeps={})".format(len(test_y)))
+    for _x in test_x: logger.info(_x.shape)
+    print_n_samples_each_class(np.hstack(test_y))
 
     # Add class weights to determine loss
     # class_weights = compute_portion_each_class(np.hstack(train_y))

@@ -31,13 +31,21 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", type=str, default="./prof_data/resteaze",
+    parser.add_argument("--data_dir",
+                        type=str,
+                        default="./prof_data/resteaze",
                         help="File path to the resteaze dataset.")
-    parser.add_argument("--output_dir", type=str, default="./prof_data/resteaze/ppg_ledgreen",
+    parser.add_argument("--output_dir",
+                        type=str,
+                        default="./prof_data/resteaze/ppg_ledgreen",
                         help="Directory where to save outputs.")
-    parser.add_argument("--select_ch", type=str, default="LedGreen",
+    parser.add_argument("--select_ch",
+                        type=str,
+                        default="ledGreen",
                         help="Name of the channel in the dataset.")
-    parser.add_argument("--log_file", type=str, default="info_ch_extract.log",
+    parser.add_argument("--log_file",
+                        type=str,
+                        default="info_ch_extract.log",
                         help="Log file.")
     args = parser.parse_args()
 
@@ -66,14 +74,17 @@ def main():
         logger.info("Loading ...")
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
-
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        ppg_df = df[['unixTimes', 'LedGreen', 'sleep_stage', 'sleep_state']].dropna().reset_index(drop=True)
+        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage',
+                     'sleep_state']].dropna().reset_index(drop=True)
 
-        start_datetime = datetime.datetime.fromtimestamp(ppg_df['unixTimes'][0] / 1000)
+        start_datetime = datetime.datetime.fromtimestamp(
+            ppg_df['unixTimes'][0] / 1000)
         logger.info("Start datetime: {}".format(str(start_datetime)))
 
-        file_duration = datetime.datetime.fromtimestamp((ppg_df['unixTimes'][len(ppg_df)-1] - ppg_df['unixTimes'][0]) / 1000)
+        file_duration = datetime.datetime.fromtimestamp(
+            (ppg_df['unixTimes'][len(ppg_df) - 1] - ppg_df['unixTimes'][0]) /
+            1000)
         logger.info("File duration: {} sec".format(file_duration))
         epoch_duration = 30
         logger.info("Epoch duration: {} sec".format(epoch_duration))
@@ -90,9 +101,14 @@ def main():
         lowcut = 0.35
         highcut = 5.0
 
-        pro_ppg = butter_bandpass_filter(ppg_df[select_ch], lowcut, highcut, fs, order=5)
+        pro_ppg = butter_bandpass_filter(ppg_df[select_ch],
+                                         lowcut,
+                                         highcut,
+                                         fs,
+                                         order=5)
 
-        signals = pro_ppg[:-(ppg_df.shape[0] % n_epoch_samples)].reshape(-1, n_epoch_samples)
+        signals = pro_ppg[:-(ppg_df.shape[0] % n_epoch_samples)].reshape(
+            -1, n_epoch_samples)
         logger.info("Select channel: {}".format(select_ch))
         logger.info("Select channel samples: {}".format(ch_samples))
         logger.info("Sample rate: {}".format(sampling_rate))
@@ -103,10 +119,11 @@ def main():
         # Generate labels from onset and duration annotation
         labels = []
 
-        sleep_state = ppg_df['sleep_state'][:-(ppg_df.shape[0] % n_epoch_samples)]
+        sleep_state = ppg_df['sleep_state'][:-(ppg_df.shape[0] %
+                                               n_epoch_samples)]
         k = 0
         for j in range(n_epochs):
-            tmp = j*750
+            tmp = j * 750
             labels.append(round(sum(sleep_state[k:tmp] / 750)))
             k = tmp
 
@@ -126,7 +143,7 @@ def main():
         end_idx = nw_idx[-1] + (w_edge_mins * 2)
         if start_idx < 0: start_idx = 0
         if end_idx >= len(y): end_idx = len(y) - 1
-        select_idx = np.arange(start_idx, end_idx+1)
+        select_idx = np.arange(start_idx, end_idx + 1)
         logger.info("Data before selection: {}, {}".format(x.shape, y.shape))
         x = x[select_idx]
         y = y[select_idx]

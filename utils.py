@@ -1,6 +1,6 @@
 import numpy as np
 
-from sleepstage import class_dict
+from sleepstage import class_dict, resteaze_class_dict
 
 
 import logging
@@ -31,6 +31,15 @@ def print_n_samples_each_class(labels):
     for c in unique_labels:
         n_samples = len(np.where(labels == c)[0])
         logger.info("{}: {}".format(class_dict[c], n_samples))
+
+
+def print_n_samples_each_class_resteaze(labels):
+    """Print the number of samples in each class."""
+
+    unique_labels = np.unique(labels)
+    for c in unique_labels:
+        n_samples = len(np.where(labels == c)[0])
+        logger.info("{}: {}".format(resteaze_class_dict[c], n_samples))
 
 
 def compute_portion_each_class(labels):
@@ -109,4 +118,3 @@ def get_balance_class_sample(x, y):
     balance_y = np.hstack(balance_y)
 
     return balance_x, balance_y
-
