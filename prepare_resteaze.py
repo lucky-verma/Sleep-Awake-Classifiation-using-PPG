@@ -66,7 +66,9 @@ def main():
         logger.info("Loading ...")
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
-        ppg_df = pd.read_csv(ppg_fnames[i], sep=',').dropna()
+
+        df = pd.read_csv(ppg_fnames[i], sep=',')
+        ppg_df = df[['unixTimes', 'LedGreen', 'sleep_stage', 'sleep_state']].dropna().reset_index(drop=True)
 
         start_datetime = datetime.datetime.fromtimestamp(ppg_df['unixTimes'][0] / 1000)
         logger.info("Start datetime: {}".format(str(start_datetime)))
@@ -81,7 +83,7 @@ def main():
 
         sampling_rate = 25
         n_epoch_samples = int(epoch_duration * sampling_rate)
-        
+
         # apply bandpass filter
 
         fs = 25
@@ -102,10 +104,11 @@ def main():
         labels = []
 
         sleep_state = ppg_df['sleep_state'][:-(ppg_df.shape[0] % n_epoch_samples)]
-        i = 0
+        k = 0
         for j in range(n_epochs):
-            labels.append(round(sum(sleep_state[i:j])))
-            i = j
+            tmp = j*750
+            labels.append(round(sum(sleep_state[k:tmp] / 750)))
+            k = tmp
 
         labels = np.hstack(labels)
 
@@ -118,7 +121,7 @@ def main():
 
         # Select only sleep periods
         w_edge_mins = 30
-        nw_idx = np.where(y != resteaze_stage_dict["W"])[0]
+        nw_idx = np.where(y != resteaze_stage_dict["WK"])[0]
         start_idx = nw_idx[0] - (w_edge_mins * 2)
         end_idx = nw_idx[-1] + (w_edge_mins * 2)
         if start_idx < 0: start_idx = 0
