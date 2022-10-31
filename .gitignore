@@ -1,4 +1,6 @@
 data
+out_sleepedf/
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -132,3 +134,5 @@ dmypy.json
 
 .data/
 .out_sleepedf/
+out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
+out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
