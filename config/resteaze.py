@@ -17,7 +17,7 @@ params = {
     "n_rnn_layers": 1,
     "n_rnn_units": 128,
     "sampling_rate": 100.0,
-    "input_size": 3000,
+    "input_size": 750,
     "n_classes": 5,
     "l2_weight_decay": 1e-3,
 
