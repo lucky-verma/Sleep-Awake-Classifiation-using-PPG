@@ -16,21 +16,21 @@ params = {
     "model": "model-mod-8",
     "n_rnn_layers": 1,
     "n_rnn_units": 128,
-    "sampling_rate": 100.0,
+    "sampling_rate": 25.0,
     "input_size": 750,
-    "n_classes": 5,
+    "n_classes": 2,
     "l2_weight_decay": 1e-3,
 
     # Dataset
     "dataset": "resteaze",
     "data_dir": "./prof_data/resteaze/ppg_ledgreen",
-    "n_folds": 20,
+    "n_folds": 5,
     "n_subjects": 20,
 
     # Data Augmentation
     "augment_seq": True,
     "augment_signal_full": True,
-    "weighted_cross_ent": True,
+    "weighted_cross_ent": False,
 }
 
 train = params.copy()

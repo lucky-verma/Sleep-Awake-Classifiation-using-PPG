@@ -7,6 +7,8 @@ import shutil
 import mne
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
 
 from data import load_data, get_subject_files
 from model import TinySleepNet
@@ -143,7 +145,7 @@ def train(
     if config['weighted_cross_ent']:
         config["class_weights"] = np.asarray([1., 1.5, 1., 1., 1.], dtype=np.float32)
     else:
-        config["class_weights"] = np.asarray([1., 1., 1., 1., 1.], dtype=np.float32)
+        config["class_weights"] = np.asarray([1., 1.], dtype=np.float32)
     logger.info(f'  Weighted cross entropy: {config["class_weights"]}')
 
     # Create a model

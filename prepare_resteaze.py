@@ -75,18 +75,18 @@ def main():
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage',
-                     'sleep_state']].dropna().reset_index(drop=True)
-                     
-        ppg_df['sleep_state'] = ppg_df['sleep_state'].mask(lambda col: col == -1, 6)
+        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage', 'sleep_state']].dropna()
 
-        start_datetime = datetime.datetime.fromtimestamp(
-            ppg_df['unixTimes'][0] / 1000)
+        ppg_df = ppg_df[ppg_df.sleep_state != -1].reset_index(drop=True)
+
+        # Binary Classification
+        ppg_df["sleep_state"] = np.where(ppg_df["sleep_state"] == 0, 0, 1)
+
+        start_datetime = datetime.datetime.fromtimestamp(ppg_df['unixTimes'][0] / 1000)
         logger.info("Start datetime: {}".format(str(start_datetime)))
 
         file_duration = datetime.datetime.fromtimestamp(
-            (ppg_df['unixTimes'][len(ppg_df) - 1] - ppg_df['unixTimes'][0]) /
-            1000)
+            (ppg_df['unixTimes'][len(ppg_df) - 1] - ppg_df['unixTimes'][0]) / 1000)
         logger.info("File duration: {} sec".format(file_duration))
         epoch_duration = 30
         logger.info("Epoch duration: {} sec".format(epoch_duration))
@@ -150,21 +150,22 @@ def main():
         x = x[select_idx]
         y = y[select_idx]
         logger.info("Data after selection: {}, {}".format(x.shape, y.shape))
+        print(np.unique(y, return_counts=True))
 
-        # Remove movement and unknown
-        move_idx = np.where(y == resteaze_stage_dict["MOVE"])[0]
-        unk_idx = np.where(y == resteaze_stage_dict["UNK"])[0]
-        if len(move_idx) > 0 or len(unk_idx) > 0:
-            remove_idx = np.union1d(move_idx, unk_idx)
-            logger.info("Remove irrelavant stages")
-            logger.info("  Movement: ({}) {}".format(len(move_idx), move_idx))
-            logger.info("  Unknown: ({}) {}".format(len(unk_idx), unk_idx))
-            logger.info("  Remove: ({}) {}".format(len(remove_idx), remove_idx))
-            logger.info("  Data before removal: {}, {}".format(x.shape, y.shape))
-            select_idx = np.setdiff1d(np.arange(len(x)), remove_idx)
-            x = x[select_idx]
-            y = y[select_idx]
-            logger.info("  Data after removal: {}, {}".format(x.shape, y.shape))
+        # # Remove movement and unknown
+        # move_idx = np.where(y == resteaze_stage_dict["MOVE"])[0]
+        # unk_idx = np.where(y == resteaze_stage_dict["UNK"])[0]
+        # if len(move_idx) > 0 or len(unk_idx) > 0:
+        #     remove_idx = np.union1d(move_idx, unk_idx)
+        #     logger.info("Remove irrelavant stages")
+        #     logger.info("  Movement: ({}) {}".format(len(move_idx), move_idx))
+        #     logger.info("  Unknown: ({}) {}".format(len(unk_idx), unk_idx))
+        #     logger.info("  Remove: ({}) {}".format(len(remove_idx), remove_idx))
+        #     logger.info("  Data before removal: {}, {}".format(x.shape, y.shape))
+        #     select_idx = np.setdiff1d(np.arange(len(x)), remove_idx)
+        #     x = x[select_idx]
+        #     y = y[select_idx]
+        #     logger.info("  Data after removal: {}, {}".format(x.shape, y.shape))
 
         # Save
         filename = ntpath.basename(ppg_fnames[i]).replace(".csv", ".npz")
