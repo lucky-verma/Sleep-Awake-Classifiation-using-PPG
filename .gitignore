@@ -1,7 +1,7 @@
 data
 prof_data/
 out_sleepedf/
-out_resteaze/
+# out_resteaze/
 *.csv
 
 # Byte-compiled / optimized / DLL files
