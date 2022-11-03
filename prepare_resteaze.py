@@ -13,7 +13,8 @@ from sleepstage import resteaze_stage_dict
 from logger import get_logger
 
 from scipy.signal import butter, sosfilt, sosfreqz
-
+from scipy import signal
+from numpy import mean, sqrt, square, arange
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -26,6 +27,18 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
 def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     sos = butter_bandpass(lowcut, highcut, fs, order=order)
     y = sosfilt(sos, data)
+    return y
+
+def butter_highpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = signal.butter(order, normal_cutoff, btype='high', analog=False)
+    return b, a
+
+
+def butter_highpass_filter(data, cutoff, fs, order=5):
+    b, a = butter_highpass(cutoff, fs, order=order)
+    y = signal.filtfilt(b, a, data)
     return y
 
 
@@ -41,7 +54,7 @@ def main():
                         help="Directory where to save outputs.")
     parser.add_argument("--select_ch",
                         type=str,
-                        default="ledGreen",
+                        default="accelerometer",
                         help="Name of the channel in the dataset.")
     parser.add_argument("--log_file",
                         type=str,
@@ -75,24 +88,32 @@ def main():
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage', 'sleep_state']].dropna()
+        acc_df = df[['unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ', 'sleep_stage', 'sleep_state']].dropna()
 
-        ppg_df = ppg_df[ppg_df.sleep_state != -1].reset_index(drop=True)
+        acc_df = acc_df[acc_df.sleep_state != -1].reset_index(drop=True)
 
         # Binary Classification
-        ppg_df["sleep_state"] = np.where(ppg_df["sleep_state"] == 0, 0, 1)
+        acc_df["sleep_state"] = np.where(acc_df["sleep_state"] == 0, 0, 1)
 
-        start_datetime = datetime.datetime.fromtimestamp(ppg_df['unixTimes'][0] / 1000)
+        # RMS of accelerometer
+        acc_df['accelerometer'] = acc_df[[
+            'accelerometerX', 'accelerometerY', 'accelerometerZ'
+                            ]].apply(lambda x: sqrt(
+                                square(x['accelerometerX']) + square(x['accelerometerY']) + square(
+                                    x['accelerometerZ'])),
+                                    axis=1)
+
+        start_datetime = datetime.datetime.fromtimestamp(acc_df['unixTimes'][0] / 1000)
         logger.info("Start datetime: {}".format(str(start_datetime)))
 
         file_duration = datetime.datetime.fromtimestamp(
-            (ppg_df['unixTimes'][len(ppg_df) - 1] - ppg_df['unixTimes'][0]) / 1000)
+            (acc_df['unixTimes'][len(acc_df) - 1] - acc_df['unixTimes'][0]) / 1000)
         logger.info("File duration: {} sec".format(file_duration))
         epoch_duration = 30
         logger.info("Epoch duration: {} sec".format(epoch_duration))
 
         # Extract signal from the selected channel
-        ch_samples = len(ppg_df[select_ch])
+        ch_samples = len(acc_df[select_ch])
 
         sampling_rate = 25
         n_epoch_samples = int(epoch_duration * sampling_rate)
@@ -103,13 +124,17 @@ def main():
         lowcut = 0.35
         highcut = 5.0
 
-        pro_ppg = butter_bandpass_filter(ppg_df[select_ch],
+        pro_acc = butter_bandpass_filter(acc_df[select_ch],
                                          lowcut,
                                          highcut,
                                          fs,
-                                         order=5)
+                                         order=4)
 
-        signals = pro_ppg[:-(ppg_df.shape[0] % n_epoch_samples)].reshape(
+        # apply highpass filter
+
+        high_acc = butter_highpass_filter(pro_acc, highcut, fs, order=4)
+
+        signals = high_acc[:-(acc_df.shape[0] % n_epoch_samples)].reshape(
             -1, n_epoch_samples)
         logger.info("Select channel: {}".format(select_ch))
         logger.info("Select channel samples: {}".format(ch_samples))
@@ -121,8 +146,8 @@ def main():
         # Generate labels from onset and duration annotation
         labels = []
 
-        sleep_state = ppg_df['sleep_state'][:-(ppg_df.shape[0] %
-                                               n_epoch_samples)]
+        sleep_state = acc_df['sleep_state'][:-(acc_df.shape[0] %
+                                                 n_epoch_samples)]
         k = 0
         for j in range(n_epochs):
             tmp = j * 750
@@ -151,21 +176,6 @@ def main():
         y = y[select_idx]
         logger.info("Data after selection: {}, {}".format(x.shape, y.shape))
         print(np.unique(y, return_counts=True))
-
-        # # Remove movement and unknown
-        # move_idx = np.where(y == resteaze_stage_dict["MOVE"])[0]
-        # unk_idx = np.where(y == resteaze_stage_dict["UNK"])[0]
-        # if len(move_idx) > 0 or len(unk_idx) > 0:
-        #     remove_idx = np.union1d(move_idx, unk_idx)
-        #     logger.info("Remove irrelavant stages")
-        #     logger.info("  Movement: ({}) {}".format(len(move_idx), move_idx))
-        #     logger.info("  Unknown: ({}) {}".format(len(unk_idx), unk_idx))
-        #     logger.info("  Remove: ({}) {}".format(len(remove_idx), remove_idx))
-        #     logger.info("  Data before removal: {}, {}".format(x.shape, y.shape))
-        #     select_idx = np.setdiff1d(np.arange(len(x)), remove_idx)
-        #     x = x[select_idx]
-        #     y = y[select_idx]
-        #     logger.info("  Data after removal: {}, {}".format(x.shape, y.shape))
 
         # Save
         filename = ntpath.basename(ppg_fnames[i]).replace(".csv", ".npz")
