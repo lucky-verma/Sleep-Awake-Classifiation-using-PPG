@@ -1,2 +1,2 @@
-model_checkpoint_path: "best_model.ckpt-3586"
-all_model_checkpoint_paths: "best_model.ckpt-3586"
+model_checkpoint_path: "best_model.ckpt-678"
+all_model_checkpoint_paths: "best_model.ckpt-678"

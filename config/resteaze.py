@@ -24,8 +24,8 @@ params = {
     # Dataset
     "dataset": "resteaze",
     "data_dir": "./prof_data/resteaze/ppg_ledgreen",
-    "n_folds": 5,
-    "n_subjects": 20,
+    "n_folds": 9,
+    "n_subjects": 9,
 
     # Data Augmentation
     "augment_seq": True,
