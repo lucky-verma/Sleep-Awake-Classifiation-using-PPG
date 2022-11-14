@@ -49,7 +49,7 @@ except:
 
 if data:
     # Set the slider to select the subject to be evaluated
-    subject = st.slider('Select the subject to be evaluated', min_value=0, max_value=len(data), value=0, step=1)
+    subject = st.slider('Select the subject to be evaluated', min_value=0, max_value=len(data)-1, value=0, step=1)
     with st.spinner('Fetching and processing values.....'):
         # Load the data
         data = load(data[subject])
