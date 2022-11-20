@@ -8,6 +8,7 @@ import pyedflib
 import numpy as np
 import pandas as pd
 import datetime
+import neurokit2 as nk
 
 from sleepstage import resteaze_stage_dict
 from logger import get_logger
@@ -33,7 +34,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir",
                         type=str,
-                        default="./prof_data/resteaze",
+                        default="./prof_data/resteaze_test",
                         help="File path to the resteaze dataset.")
     parser.add_argument("--output_dir",
                         type=str,
@@ -75,9 +76,11 @@ def main():
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage', 'sleep_state']].dropna()
 
-        ppg_df = ppg_df[ppg_df.sleep_state != -1].reset_index(drop=True)
+        df = df[df.sleep_state != -1]
+
+        ppg_df = df[['unixTimes', 'ledGreen', 'sleep_stage',
+                     'sleep_state']].dropna().reset_index(drop=True)
 
         # Binary Classification
         ppg_df["sleep_state"] = np.where(ppg_df["sleep_state"] == 0, 0, 1)
@@ -97,17 +100,10 @@ def main():
         sampling_rate = 25
         n_epoch_samples = int(epoch_duration * sampling_rate)
 
-        # apply bandpass filter
-
-        fs = 25
-        lowcut = 0.35
-        highcut = 5.0
-
-        pro_ppg = butter_bandpass_filter(ppg_df[select_ch],
-                                         lowcut,
-                                         highcut,
-                                         fs,
-                                         order=5)
+        # apply neurokit signal processing
+        pro_ppg = nk.ppg_clean(ppg_df[select_ch],
+                               method='elgendi',
+                               sampling_rate=25)
 
         signals = pro_ppg[:-(ppg_df.shape[0] % n_epoch_samples)].reshape(
             -1, n_epoch_samples)
