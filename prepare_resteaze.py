@@ -34,7 +34,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir",
                         type=str,
-                        default="./prof_data/resteaze_test",
+                        default="./prof_data/resteaze",
                         help="File path to the resteaze dataset.")
     parser.add_argument("--output_dir",
                         type=str,

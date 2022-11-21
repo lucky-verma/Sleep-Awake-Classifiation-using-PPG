@@ -1,7 +1,7 @@
 params = {
     # Train
     "n_epochs": 200,
-    "learning_rate": 1e-4,
+    "learning_rate": 1e-5,
     "adam_beta_1": 0.9,
     "adam_beta_2": 0.999,
     "adam_epsilon": 1e-8,
@@ -24,8 +24,8 @@ params = {
     # Dataset
     "dataset": "resteaze",
     "data_dir": "./prof_data/resteaze/ppg_ledgreen",
-    "n_folds": 9,
-    "n_subjects": 9,
+    "n_folds": 16,
+    "n_subjects": 16,
 
     # Data Augmentation
     "augment_seq": True,
