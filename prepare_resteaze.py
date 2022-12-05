@@ -12,6 +12,7 @@ import datetime
 from sleepstage import resteaze_stage_dict
 from logger import get_logger
 
+from sklearn.preprocessing import StandardScaler
 from scipy.signal import butter, sosfilt, sosfreqz
 from scipy import signal
 from numpy import mean, sqrt, square, arange
@@ -88,7 +89,7 @@ def main():
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        acc_df = df[['unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ', 'sleep_stage', 'sleep_state']].dropna()
+        acc_df = df[['unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ', 'ledGreen', 'sleep_stage', 'sleep_state']].dropna()
 
         acc_df = acc_df[acc_df.sleep_state != -1].reset_index(drop=True)
 
