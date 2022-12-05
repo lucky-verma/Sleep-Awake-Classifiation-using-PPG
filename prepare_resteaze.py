@@ -122,20 +122,16 @@ def main():
         # apply bandpass filter
 
         fs = 25
-        lowcut = 0.35
-        highcut = 5.0
+        lowcut = 0.55
+        highcut = 3.0
 
         pro_acc = butter_bandpass_filter(acc_df[select_ch],
                                          lowcut,
                                          highcut,
                                          fs,
-                                         order=4)
+                                         order=3)
 
-        # apply highpass filter
-
-        high_acc = butter_highpass_filter(pro_acc, highcut, fs, order=4)
-
-        signals = high_acc[:-(acc_df.shape[0] % n_epoch_samples)].reshape(
+        signals = pro_acc[:-(acc_df.shape[0] % n_epoch_samples)].reshape(
             -1, n_epoch_samples)
         logger.info("Select channel: {}".format(select_ch))
         logger.info("Select channel samples: {}".format(ch_samples))
