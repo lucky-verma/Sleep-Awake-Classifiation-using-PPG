@@ -55,7 +55,7 @@ def main():
                         help="Directory where to save outputs.")
     parser.add_argument("--select_ch",
                         type=str,
-                        default="accelerometer",
+                        default="ledGreen",
                         help="Name of the channel in the dataset.")
     parser.add_argument("--log_file",
                         type=str,
@@ -89,32 +89,42 @@ def main():
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
         df = pd.read_csv(ppg_fnames[i], sep=',')
-        acc_df = df[['unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ', 'ledGreen', 'sleep_stage', 'sleep_state']].dropna()
+        df = df.apply(lambda x: pd.Series(x.dropna().values))
 
-        acc_df = acc_df[acc_df.sleep_state != -1].reset_index(drop=True)
+        all_df = df[df.sleep_state != -1].reset_index()
+
+        all_df = all_df[[
+            'unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ',
+            'gyroscopeX', 'gyroscopeY', 'gyroscopeZ', 'ledGreen',
+            'sleep_stage', 'sleep_state'
+        ]].dropna()
 
         # Binary Classification
-        acc_df["sleep_state"] = np.where(acc_df["sleep_state"] == 0, 0, 1)
+        all_df["sleep_state"] = np.where(all_df["sleep_state"] == 0, 0, 1)
 
         # RMS of accelerometer
-        acc_df['accelerometer'] = acc_df[[
+        all_df['accelerometer'] = all_df[[
             'accelerometerX', 'accelerometerY', 'accelerometerZ'
-                            ]].apply(lambda x: sqrt(
-                                square(x['accelerometerX']) + square(x['accelerometerY']) + square(
-                                    x['accelerometerZ'])),
-                                    axis=1)
+        ]].apply(lambda x: sqrt(square(x['accelerometerX']) + square(x['accelerometerY']) + square(x['accelerometerZ'])), axis=1)
 
-        start_datetime = datetime.datetime.fromtimestamp(acc_df['unixTimes'][0] / 1000)
+        # RMS of gyroscope
+        all_df['gyroscope'] = all_df[[
+            'gyroscopeX', 'gyroscopeY', 'gyroscopeZ'
+        ]].apply(lambda x: sqrt(square(x['gyroscopeX']) + square(x['gyroscopeY']) + square(x['gyroscopeZ'])), axis=1)
+
+        all_df = all_df.drop(columns=['accelerometerX', 'accelerometerY', 'accelerometerZ', 'gyroscopeX', 'gyroscopeY', 'gyroscopeZ'])
+
+        start_datetime = datetime.datetime.fromtimestamp(all_df['unixTimes'][0] / 1000)
         logger.info("Start datetime: {}".format(str(start_datetime)))
 
         file_duration = datetime.datetime.fromtimestamp(
-            (acc_df['unixTimes'][len(acc_df) - 1] - acc_df['unixTimes'][0]) / 1000)
+            (all_df['unixTimes'][len(all_df) - 1] - all_df['unixTimes'][0]) / 1000)
         logger.info("File duration: {} sec".format(file_duration))
         epoch_duration = 30
         logger.info("Epoch duration: {} sec".format(epoch_duration))
 
         # Extract signal from the selected channel
-        ch_samples = len(acc_df[select_ch])
+        ch_samples = len(all_df[select_ch])
 
         sampling_rate = 25
         n_epoch_samples = int(epoch_duration * sampling_rate)
@@ -125,13 +135,16 @@ def main():
         lowcut = 0.55
         highcut = 3.0
 
-        pro_acc = butter_bandpass_filter(acc_df[select_ch],
-                                         lowcut,
-                                         highcut,
-                                         fs,
-                                         order=3)
+        all_df['ledGreen'] = butter_bandpass_filter(all_df[select_ch],
+                                            lowcut,
+                                            highcut,
+                                            fs,
+                                            order=3)
+        temp_X = StandardScaler().fit_transform(all_df.drop(['unixTimes', 'sleep_stage', 'sleep_state'], axis=1))
+        pro_acc = np.sum(temp_X, axis=1)
 
-        signals = pro_acc[:-(acc_df.shape[0] % n_epoch_samples)].reshape(
+        # Extract epochs
+        signals = pro_acc[:-(all_df.shape[0] % n_epoch_samples)].reshape(
             -1, n_epoch_samples)
         logger.info("Select channel: {}".format(select_ch))
         logger.info("Select channel samples: {}".format(ch_samples))
@@ -143,8 +156,8 @@ def main():
         # Generate labels from onset and duration annotation
         labels = []
 
-        sleep_state = acc_df['sleep_state'][:-(acc_df.shape[0] %
-                                                 n_epoch_samples)]
+        sleep_state = all_df['sleep_state'][:-(all_df.shape[0] %
+                                               n_epoch_samples)]
         k = 0
         for j in range(n_epochs):
             tmp = j * 750
