@@ -14,6 +14,14 @@ from numpy import mean, sqrt, square, arange
 from matplotlib import pyplot as plt
 from matplotlib.pyplot import figure
 
+# streamlit page config
+st.set_page_config(
+    page_title="Heart Rate Variability",
+    page_icon=":heartbeat:",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # hide streamlit warnings
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
@@ -26,13 +34,6 @@ hide_streamlit_style = """
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-# streamlit page config
-st.set_page_config(
-    page_title="Heart Rate Variability",
-    page_icon=":heartbeat:",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 # streamlit title
 st.title("Heart Rate Variability")
