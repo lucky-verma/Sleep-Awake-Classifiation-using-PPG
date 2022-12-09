@@ -21,14 +21,33 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     y = sosfilt(sos, data)
     return y
 
-def get_analysis_data(seg_indices, seg_data, fs=25, epoch_length=30):
+
+def get_analysis_data(seg_indices,
+                      seg_data,
+                      fs=25,
+                      epoch_length=30,
+                      hasData=False):
     data = []
 
     for i in range(len(seg_indices)):
         tmp = seg_data[i]
-        for i in range(fs*epoch_length):
-            data.append(tmp)
+        if not hasData:
+            for i in range(fs * epoch_length):
+                data.append(tmp)
+        else:
+            for i in range(len(tmp)):
+                data.append(tmp[i])
 
+    return data
+
+
+def get_temp(tmp):
+    temp = tmp.dropna().to_list()
+    data = []
+    for i in range(len(temp)):
+        t = temp[i]
+        for i in range(120):
+            data.append(t)
     return data
 
 
@@ -73,9 +92,9 @@ if uploaded_file is not None:
 
 
     fs = st.sidebar.slider('Sampling Frequency', 1, 100, 25)
-    lowcut = st.sidebar.slider('lowcut', 0.1, 2.0, 0.55)
-    highcut = st.sidebar.slider('highcut', 1, 10, 3)
-    order = st.sidebar.slider('order', 1, 10, 3)
+    lowcut = st.sidebar.slider('lowcut', 0.1, 2.0, 0.45)
+    highcut = st.sidebar.slider('highcut', 1, 10, 4)
+    order = st.sidebar.slider('order', 1, 10, 4)
     epoch_length = st.sidebar.slider('Epoch Length', 1, 300, 30)
 
     df['ledGreen'] = butter_bandpass_filter(df['ledGreen'],
@@ -114,11 +133,9 @@ if uploaded_file is not None:
 
         # Create a dataframe the respiration rate and bpm and heart rate variability
         df_seg = pd.DataFrame()
-        df_seg['respiration_rate'] = get_analysis_data(
-            wd_seg['segment_indices'], wd_seg['RR_list'], fs, epoch_length)
         df_seg['bpm'] = get_analysis_data(wd_seg['segment_indices'], m_seg['bpm'], fs, epoch_length)
         df_seg['hrv'] = get_analysis_data(wd_seg['segment_indices'], m_seg['rmssd'], fs, epoch_length)
-        df_seg['hr'] = get_analysis_data(wd_seg['segment_indices'], wd_seg['hr'], fs, epoch_length)
+        df_seg['hr'] = pd.Series(get_analysis_data(wd_seg['segment_indices'], wd_seg['hr'], fs, epoch_length, True))
         df_seg['breathingrate'] = get_analysis_data(wd_seg['segment_indices'], m_seg['breathingrate'] * 1000, fs, epoch_length)
 
         # plotting using go
@@ -128,11 +145,14 @@ if uploaded_file is not None:
         fig.add_trace(go.Scatter(x=df.index, y=df_seg['bpm'], name='BPM'))
         fig.add_trace(go.Scatter(x=df.index, y=df_seg['hrv'], name='HRV'))
         fig.add_trace(go.Scatter(x=df.index, y=df_seg['breathingrate'], name='Breathing Rate'))
-        fig.add_trace(go.Scatter(x=df.index, y=df_seg['respiration_rate']*500, name='Respiration Rate'))
+        fig.add_trace(go.Scatter(x=df.index, y=get_temp(mdf['tempObject']), name='Temperature'))
         fig.update_layout(
             title="Sleep State Overlay",
         )
-        st.plotly_chart(fig)
+        # st.plotly_chart(fig)
+
+        # save the plot as html file
+        fig.write_html(f"{fname}.html")
 
     else:
         # Select the start and end of the subset
