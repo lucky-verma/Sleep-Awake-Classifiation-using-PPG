@@ -88,46 +88,37 @@ def main():
         logger.info("Loading ...")
         logger.info("Signal file: {}".format(ppg_fnames[i]))
 
-        df = pd.read_csv(ppg_fnames[i], sep=',')
-        df = df.apply(lambda x: pd.Series(x.dropna().values))
+        df = pd.read_csv(ppg_fnames[i], sep=',').reset_index(drop=True)
+        
+        ## New prcoessing
+        all_df = df[[
+            'unixTimes', 'ledGreen', 'sleep_state'
+        ]]
 
-        all_df = df[df.sleep_state != -1].reset_index()
+        all_df = all_df[all_df['sleep_state'].notna()]
+        df = all_df.interpolate()
 
-        all_df = all_df[[
-            'unixTimes', 'accelerometerX', 'accelerometerY', 'accelerometerZ',
-            'gyroscopeX', 'gyroscopeY', 'gyroscopeZ', 'ledGreen',
-            'sleep_stage', 'sleep_state'
-        ]].dropna()
+        df = df[df.sleep_state != -1].reset_index()
 
         # Binary Classification
-        all_df["sleep_state"] = np.where(all_df["sleep_state"] == 0, 0, 1)
+        df["sleep_state"] = np.where(df["sleep_state"] == 0, 0, 1)
 
-        # RMS of accelerometer
-        all_df['accelerometer'] = all_df[[
-            'accelerometerX', 'accelerometerY', 'accelerometerZ'
-        ]].apply(lambda x: sqrt(square(x['accelerometerX']) + square(x['accelerometerY']) + square(x['accelerometerZ'])), axis=1)
+        from scipy.signal import butter, sosfilt, sosfreqz
 
-        # RMS of gyroscope
-        all_df['gyroscope'] = all_df[[
-            'gyroscopeX', 'gyroscopeY', 'gyroscopeZ'
-        ]].apply(lambda x: sqrt(square(x['gyroscopeX']) + square(x['gyroscopeY']) + square(x['gyroscopeZ'])), axis=1)
 
-        all_df = all_df.drop(columns=['accelerometerX', 'accelerometerY', 'accelerometerZ', 'gyroscopeX', 'gyroscopeY', 'gyroscopeZ'])
+        def butter_bandpass(lowcut, highcut, fs, order=5):
+            nyq = 0.5 * fs
+            low = lowcut / nyq
+            high = highcut / nyq
+            sos = butter(order, [low, high], analog=False, btype='band', output='sos')
+            return sos
 
-        start_datetime = datetime.datetime.fromtimestamp(all_df['unixTimes'][0] / 1000)
-        logger.info("Start datetime: {}".format(str(start_datetime)))
 
-        file_duration = datetime.datetime.fromtimestamp(
-            (all_df['unixTimes'][len(all_df) - 1] - all_df['unixTimes'][0]) / 1000)
-        logger.info("File duration: {} sec".format(file_duration))
-        epoch_duration = 30
-        logger.info("Epoch duration: {} sec".format(epoch_duration))
+        def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
+            sos = butter_bandpass(lowcut, highcut, fs, order=order)
+            y = sosfilt(sos, data)
+            return y
 
-        # Extract signal from the selected channel
-        ch_samples = len(all_df[select_ch])
-
-        sampling_rate = 25
-        n_epoch_samples = int(epoch_duration * sampling_rate)
 
         # apply bandpass filter
 
@@ -135,16 +126,34 @@ def main():
         lowcut = 0.55
         highcut = 3.0
 
-        all_df['ledGreen'] = butter_bandpass_filter(all_df[select_ch],
-                                            lowcut,
-                                            highcut,
-                                            fs,
-                                            order=3)
-        temp_X = StandardScaler().fit_transform(all_df.drop(['unixTimes', 'sleep_stage', 'sleep_state'], axis=1))
+        df['ledGreen'] = butter_bandpass_filter(df['ledGreen'],
+                                                    lowcut,
+                                                    highcut,
+                                                    fs,
+                                                    order=3)
+
+        
+        # Extract signal from the selected channel
+        start_datetime = datetime.datetime.fromtimestamp(df['unixTimes'][0] / 1000)
+        logger.info("Start datetime: {}".format(str(start_datetime)))
+
+        file_duration = datetime.datetime.fromtimestamp(
+            (df['unixTimes'][len(df) - 1] - df['unixTimes'][0]) / 1000)
+        logger.info("File duration: {} sec".format(file_duration))
+        epoch_duration = 30
+        logger.info("Epoch duration: {} sec".format(epoch_duration))
+
+        # Extract signal from the selected channel
+        ch_samples = len(df[select_ch])
+
+        sampling_rate = 25
+        n_epoch_samples = int(epoch_duration * sampling_rate)
+
+        temp_X = StandardScaler().fit_transform(df.drop(['unixTimes', 'sleep_state'], axis=1))
         pro_acc = np.sum(temp_X, axis=1)
 
         # Extract epochs
-        signals = pro_acc[:-(all_df.shape[0] % n_epoch_samples)].reshape(
+        signals = pro_acc[:-(df.shape[0] % n_epoch_samples)].reshape(
             -1, n_epoch_samples)
         logger.info("Select channel: {}".format(select_ch))
         logger.info("Select channel samples: {}".format(ch_samples))
@@ -156,7 +165,7 @@ def main():
         # Generate labels from onset and duration annotation
         labels = []
 
-        sleep_state = all_df['sleep_state'][:-(all_df.shape[0] %
+        sleep_state = df['sleep_state'][:-(df.shape[0] %
                                                n_epoch_samples)]
         k = 0
         for j in range(n_epochs):
