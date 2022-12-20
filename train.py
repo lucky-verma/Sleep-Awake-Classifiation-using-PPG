@@ -143,9 +143,9 @@ def train(
     else:
         logger.info(f'  Weighted cross entropy: {config["weighted_cross_ent"]}')
     if config['weighted_cross_ent']:
-        config["class_weights"] = np.asarray([1., 1.5, 1., 1., 1.], dtype=np.float32)
+        config["class_weights"] = np.asarray([1., 1.5], dtype=np.float32)
     else:
-        config["class_weights"] = np.asarray([1., 1.], dtype=np.float32)
+        config["class_weights"] = np.asarray([1., 1.5], dtype=np.float32)
     logger.info(f'  Weighted cross entropy: {config["class_weights"]}')
 
     # Create a model

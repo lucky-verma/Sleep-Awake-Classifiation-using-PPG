@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 model_checkpoint_path: "best_model.ckpt-5353"
 all_model_checkpoint_paths: "best_model.ckpt-5353"
+=======
+model_checkpoint_path: "best_model.ckpt-90"
+all_model_checkpoint_paths: "best_model.ckpt-90"
+>>>>>>> accelerometer
