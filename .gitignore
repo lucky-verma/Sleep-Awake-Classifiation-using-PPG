@@ -154,7 +154,6 @@ notebooks/export/learner.pkl
 *.pth
 *.pkl
 
-# data
-prof_data/
-out_sleepedf/
-out_resteaze/
+notebooks/export/learner.pkl
+notebooks/export/dls_1.pth
+notebooks/export/dls_0.pth
