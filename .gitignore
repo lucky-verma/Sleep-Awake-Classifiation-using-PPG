@@ -137,3 +137,9 @@ dmypy.json
 .out_sleepedf/
 out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
 out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
+
+# Model and data files
+*.h5
+*.hdf5
+*.pkl
+*.pth
