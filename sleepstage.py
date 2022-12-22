@@ -21,12 +21,7 @@ stage_dict = {
 
 resteaze_stage_dict = {
     "WK": 0,
-    "N1": 1,
-    "N2": 2,
-    "N3": 3,
-    "REM": 4,
-    "MOVE": MOVE,
-    "UNK": UNK,
+    "N": 1,
 }
 
 
@@ -42,10 +37,5 @@ class_dict = {
 
 resteaze_class_dict = {
     0 : "WK",
-    1 : "N1",
-    2 : "N2",
-    3 : "N3",
-    4 : "REM",
-    MOVE: "MOVE",
-    UNK: "UNK",
+    1 : "N"
 }

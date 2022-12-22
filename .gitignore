@@ -1,6 +1,7 @@
 data
 prof_data/
 out_sleepedf/
+export
 *.csv
 
 # Byte-compiled / optimized / DLL files
@@ -138,8 +139,21 @@ dmypy.json
 out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
 out_sleepedf/train/0/log/train/events.out.tfevents.1667165026.ECLN-101052
 
-# Model and data files
-*.h5
-*.hdf5
-*.pkl
+notebooks/export/*
+notebooks/export/LSMT_FCN.pth
+notebooks/export/learner.pkl
+notebooks/export/dls_1.pth
+notebooks/export/dls_0.pth
+notebooks/export/dls_0.pth
+notebooks/export/learner.pkl
+
+# csv files
+*.csv
+
+# pth and pkl files
 *.pth
+*.pkl
+
+notebooks/export/learner.pkl
+notebooks/export/dls_1.pth
+notebooks/export/dls_0.pth

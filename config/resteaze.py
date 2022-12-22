@@ -1,7 +1,7 @@
 params = {
     # Train
     "n_epochs": 200,
-    "learning_rate": 1e-4,
+    "learning_rate": 1e-5,
     "adam_beta_1": 0.9,
     "adam_beta_2": 0.999,
     "adam_epsilon": 1e-8,
@@ -16,21 +16,21 @@ params = {
     "model": "model-mod-8",
     "n_rnn_layers": 1,
     "n_rnn_units": 128,
-    "sampling_rate": 100.0,
+    "sampling_rate": 25.0,
     "input_size": 750,
-    "n_classes": 5,
+    "n_classes": 2,
     "l2_weight_decay": 1e-3,
 
     # Dataset
     "dataset": "resteaze",
     "data_dir": "./prof_data/resteaze/ppg_ledgreen",
-    "n_folds": 20,
-    "n_subjects": 20,
+    "n_folds": 16,
+    "n_subjects": 16,
 
     # Data Augmentation
     "augment_seq": True,
     "augment_signal_full": True,
-    "weighted_cross_ent": True,
+    "weighted_cross_ent": False,
 }
 
 train = params.copy()

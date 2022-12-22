@@ -2,8 +2,11 @@ import argparse
 import importlib
 import os
 import tensorflow as tf
+import warnings
+warnings.filterwarnings('ignore')
 
 from train import train
+
 
 
 def run(db, gpu, from_fold, to_fold, suffix='', random_seed=42):

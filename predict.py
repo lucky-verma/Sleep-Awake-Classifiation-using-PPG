@@ -13,8 +13,7 @@ from minibatching import (iterate_minibatches,
                           iterate_batch_seq_minibatches,
                           iterate_batch_multiple_seq_minibatches)
 from utils import (get_balance_class_oversample,
-                   print_n_samples_each_class,
-                   save_seq_ids,
+                   print_n_samples_each_class_resteaze, save_seq_ids,
                    load_seq_ids)
 from logger import get_logger
 
@@ -117,7 +116,7 @@ def predict(
             # Print test set
             logger.info("Test set (n_night_sleeps={})".format(len(test_y)))
             for _x in test_x: logger.info(_x.shape)
-            print_n_samples_each_class(np.hstack(test_y))
+            print_n_samples_each_class_resteaze(np.hstack(test_y))
 
             if config["model"] == "model-origin":
                 for night_idx, night_data in enumerate(zip(test_x, test_y)):
@@ -204,11 +203,11 @@ def predict(
 
     acc = skmetrics.accuracy_score(y_true=trues, y_pred=preds)
     f1_score = skmetrics.f1_score(y_true=trues, y_pred=preds, average="macro")
-    cm = skmetrics.confusion_matrix(y_true=trues, y_pred=preds, labels=[0,1,2,3,4])
+    cm = skmetrics.confusion_matrix(y_true=trues, y_pred=preds, labels=[0,1])
 
     logger.info("")
     logger.info("=== Overall ===")
-    print_n_samples_each_class(trues)
+    print_n_samples_each_class_resteaze(trues)
     logger.info("n={}, acc={:.1f}, mf1={:.1f}".format(
         len(preds),
         acc*100.0,
